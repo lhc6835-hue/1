@@ -300,5 +300,7 @@ window.__dbg = () => {
   return { px: p.x, py: p.y, ex: e?.x, ey: e?.y, victim: !!mission.nearby().victim, mode };
 };
 
+window.__game = { mission: () => mission, start, save: () => save };
+
 title();
 requestAnimationFrame(frame);

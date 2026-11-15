@@ -20,7 +20,7 @@ export const THEMES = {
   neon: {
     floor: [0x231c32, 0x201a2e], seam: 0x2e2244, bolt: 0x3a2c54,
     wallTop: 0x40345e, wallTop2: 0x382e54, wallFace: 0x241c38, wallEdge: 0xff4ab8, wallDark: 0x140f22,
-    amb: [0.46, 0.42, 0.6], lamp: 0xff8ae0, accent: 0x3affe0,
+    amb: [0.52, 0.48, 0.66], lamp: 0xff8ae0, accent: 0x3affe0,
   },
 };
 
@@ -116,6 +116,15 @@ export class World {
       for (let i = 0; i < 16; i++) { put(X + i, Y + 15, T.seam); put(X + 15, Y + i, T.seam); }
       put(X + 2, Y + 2, T.bolt); put(X + 13, Y + 2, T.bolt); put(X + 2, Y + 13, T.bolt); put(X + 13, Y + 13, T.bolt);
       if (R.next() < 0.25) { const sx = X + R.int(3, 11), sy = Y + R.int(3, 11); put(sx, sy, mix(fl, 0x000000, 0.25)); put(sx + 1, sy, mix(fl, 0x000000, 0.15)); }
+      if (this.stage.theme === "cryo" && R.next() < 0.35) { // frost creeping over the plates
+        const fx = X + R.int(1, 12), fy = Y + R.int(1, 12), n = R.int(3, 7);
+        for (let k = 0; k < n; k++) put(fx + R.int(-2, 3), fy + R.int(-1, 2), R.next() < 0.3 ? 0x8aa8c4 : 0x46566c);
+      }
+      if (this.stage.theme === "neon") { // a neon grid in the floor, brighter every few tiles
+        const hot = tx % 4 === 0 || ty % 4 === 0;
+        for (let i = 0; i < 16; i++) { put(X + i, Y + 15, hot && ty % 4 === 0 ? 0x4a2a6e : T.seam); put(X + 15, Y + i, hot && tx % 4 === 0 ? 0x2a3a6e : T.seam); }
+        if (tx % 4 === 0 && ty % 4 === 0) { put(X + 15, Y + 15, 0xff4ab8); put(X + 14, Y + 15, 0x8a2a6e); put(X + 15, Y + 14, 0x8a2a6e); }
+      }
       // zone border hazard stripes in the zone's rank colour
       if (!isWall(tx, ty)) {
         const zc = RANK_TINT[z];
@@ -225,6 +234,8 @@ export class World {
       if (ch === "h") add(tx * TILE + 8, ty * TILE + 4, 40, 0xff4ab8, 0.45);
       if (ch === "t") add(tx * TILE + 8, ty * TILE + 8, 22, 0x3affa0, 0.35);
       if (ch === "X") add(tx * TILE + 8, ty * TILE + 8, 30, 0x3ae8ff, 0.4);
+      if (this.stage.theme === "neon" && tx % 4 === 0 && ty % 4 === 0 && !this.solidT(tx, ty)) add(tx * TILE + 16, ty * TILE + 16, 22, (tx + ty) % 8 ? 0xff4ab8 : 0x3affe0, 0.28);
+      if (ch === "~") add(tx * TILE + 8, ty * TILE + 8, 30, 0xff3a8a, 0.3);
     }
     this.light = L; this.lw = W; this.lh = H;
     return L;

@@ -92,6 +92,7 @@ export class Mission {
     this.time += dt;
     this.updatePlayer(dt, input);
     for (const e of this.enemies) this.updateEnemy(e, dt);
+    this.separate();
     this.updateCameras(dt);
     this.updateLasers(dt);
     this.updateAlarm(dt);
@@ -474,6 +475,14 @@ export class Mission {
       }
     }
   }
+  // robots don't stack on top of each other
+  separate() {
+    const L = this.enemies.filter((e) => e.state !== "dead" && e.state !== "dying");
+    for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
+      const a = L[i], b = L[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+      if (d > 0.01 && d < 11) { const k = (11 - d) * 0.5; this.move(a, (-dx / d) * k, (-dy / d) * k); this.move(b, (dx / d) * k, (dy / d) * k); }
+    }
+  }
   turn(e, a, dt, rate) { e.face += angDiff(a, e.face) * (1 - Math.exp(-rate * dt)); }
 
   fire(e) {
@@ -690,9 +699,9 @@ export class Mission {
     let x = e.x - ox, y = e.y - oy;
     if (e.state === "dying") {
       x += e.push.x * ease.outCubic(clamp(e.dieT / 0.1)) + (Math.random() - 0.5) * 1.5; y += e.push.y * ease.outCubic(clamp(e.dieT / 0.1));
-      const blink = e.dieT < 0.12 || Math.floor(e.dieT * 30) % 3 === 0;
+      const blink = e.dieT < 0.05 || Math.floor(e.dieT * 30) % 3 === 0;
       this.drawRobot(ctx, e.robot, x, y, fc.f, 0, fc.flip, false);
-      if (blink) this.drawRobot(ctx, e.robot, x, y, fc.f, 0, fc.flip, true, e.dieT < 0.12 ? 1 : 0.6);
+      if (blink) this.drawRobot(ctx, e.robot, x, y, fc.f, 0, fc.flip, true, e.dieT < 0.05 ? 1 : 0.5);
       return;
     }
     this.drawRobot(ctx, e.robot, x, y, fc.f, fr, fc.flip, false);
