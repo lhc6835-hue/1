@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>스크랩 스파이</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="screen"></canvas>
+  <div id="vignette"></div>
+  <div id="hud" hidden>
+    <div class="hud-tl">
+      <div id="hp"></div>
+      <div id="rank"></div>
+      <div id="parts"></div>
+    </div>
+    <div class="hud-tc"><div id="alarm"></div></div>
+    <div class="hud-tr"><div id="objective"></div><div id="earned"></div></div>
+    <div class="hud-bl"><div id="zone"></div><div id="dash"><span></span></div></div>
+    <div class="hud-bc"><div id="prompt"></div></div>
+    <div id="toast"></div>
+  </div>
+  <div id="ui"></div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

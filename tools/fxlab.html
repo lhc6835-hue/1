@@ -1,0 +1,62 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FX Lab</title>
+<style>body{margin:0;background:#0b0a10;color:#ccc;font:12px monospace}canvas{image-rendering:pixelated;display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+// Contact sheets for effects and robots: ?fx=stab&times=0,0.03,...&zoom=3   or   ?robots=1
+import { Frame, Painter, composite } from "../src/engine/fx.js";
+import * as E from "../src/fx/effects.js";
+import { TYPES, robotOf, robotSprites, SW, SH, AX, AY } from "../src/game/parts.js";
+
+const q = new URLSearchParams(location.search);
+const zoom = +(q.get("zoom") || 3);
+const out = document.getElementById("c"), octx = out.getContext("2d");
+
+function floor(ctx, w, h) {
+  for (let y = 0; y < h; y += 16) for (let x = 0; x < w; x += 16) {
+    ctx.fillStyle = ((x + y) / 16) % 2 ? "#3a3440" : "#36303c"; ctx.fillRect(x, y, 16, 16);
+    ctx.fillStyle = "#2a2430"; ctx.fillRect(x, y + 15, 16, 1); ctx.fillRect(x + 15, y, 1, 16);
+  }
+}
+
+if (q.get("robots")) {
+  const types = Object.keys(TYPES), cw = 26, ch = 30;
+  out.width = cw * 12 * zoom; out.height = ch * types.length * zoom;
+  const lo = document.createElement("canvas"); lo.width = cw * 12; lo.height = ch * types.length;
+  const lx = lo.getContext("2d"); floor(lx, lo.width, lo.height);
+  types.forEach((t, j) => {
+    const S = robotSprites(robotOf(t));
+    for (let f = 0; f < 3; f++) for (let fr = 0; fr < 4; fr++) lx.drawImage(S.frames[f][fr], (f * 4 + fr) * cw + 3, j * ch + 3);
+  });
+  octx.imageSmoothingEnabled = false; octx.drawImage(lo, 0, 0, out.width, out.height);
+  document.title = "done";
+} else {
+  const name = q.get("fx"), W = +(q.get("w") || 96), H = +(q.get("h") || 72);
+  const times = (q.get("times") || "0,0.02,0.05,0.08,0.12,0.18,0.25,0.35,0.5,0.7,1,1.5").split(",").map(Number);
+  const cols = Math.min(times.length, +(q.get("cols") || 6)), rows = Math.ceil(times.length / cols);
+  out.width = W * cols * zoom; out.height = H * rows * zoom;
+  const opts = JSON.parse(q.get("o") || "{}");
+  const victim = q.get("victim");
+  const S = robotSprites(robotOf(victim || "worker"));
+  times.forEach((T, k) => {
+    const lo = document.createElement("canvas"); lo.width = W; lo.height = H;
+    const lx = lo.getContext("2d", { willReadFrequently: true }); floor(lx, W, H);
+    const cx = W / 2, cy = H * 0.72;
+    const fx = E[name]({ x: cx, y: cy, seed: 3, ...opts, ...(opts.tx != null ? {} : { tx: cx - 24, ty: cy }) });
+    const dt = 1 / 120; let t = 0;
+    while (t + dt <= T + 1e-9) { fx.update(dt); t += dt; }
+    const frame = new Frame(W, H), p = new Painter(frame);
+    fx.draw(p, 0, 0, "ground");
+    const gimg = lx.getImageData(0, 0, W, H);
+    if (victim && !(fx.popped)) lx.drawImage(S.frames[0][0], Math.round(cx - AX), Math.round(cy - AY));
+    fx.draw(p, 0, 0, "air");
+    const img = lx.getImageData(0, 0, W, H);
+    composite(frame, img.data, [0.62, 0.6, 0.68]);
+    lx.putImageData(img, 0, 0);
+    lx.fillStyle = "#fff8"; lx.font = "8px monospace"; lx.fillText(T.toFixed(2), 2, 8);
+    octx.imageSmoothingEnabled = false;
+    octx.drawImage(lo, (k % cols) * W * zoom, Math.floor(k / cols) * H * zoom, W * zoom, H * zoom);
+  });
+  document.title = "done";
+}
+</script></body></html>
