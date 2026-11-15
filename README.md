@@ -5,7 +5,10 @@
 
 ## 실행
 
-ES 모듈이라 로컬 서버로 열어야 해요. 빌드 과정은 없어요.
+가장 쉬운 방법: `dist/scrap-spy.html` 하나만 브라우저로 열면 돼요 (JS·CSS·폰트가 모두 들어 있어요).
+소스를 고친 뒤엔 `node tools/bundle.mjs`로 다시 묶어요.
+
+개발할 땐 ES 모듈이라 로컬 서버로 열어요.
 
 ```bash
 python3 -m http.server 8765     # 또는 npx serve
